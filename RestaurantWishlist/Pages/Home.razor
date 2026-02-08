@@ -1,0 +1,187 @@
+﻿@page "/"
+
+@inject IJSRuntime JS
+
+@using RestaurantWishlist.Enums
+@using RestaurantWishlist.Tables
+
+<PageTitle>Wishlist Restaurants</PageTitle>
+
+<div class="screen">
+    <header>
+        <h1>Wishlist Restaurants</h1>
+        <button class="icon-btn" @onclick="OpenFilters">⚙️</button>
+    </header>
+
+    <div class="wheel-container" @ref="WheelRef" @onscroll="OnScroll">
+        @for (int i = 0; i < VisibleRestaurants.Count; i++)
+        {
+            var r = VisibleRestaurants[i];
+            <div class="wheel-item @(i == SelectedIndex ? "active" : "")">
+                <div class="wheel-name">@r.Name</div>
+                <div class="wheel-meta">@r.Cuisine</div>
+            </div>
+        }
+    </div>
+
+    @if (SelectedRestaurant is not null)
+    {
+        <div class="center-actions">
+            <button @onclick="EditSelected">✏️ Edit</button>
+            <button class="danger" @onclick="DeleteSelected">🗑️ Delete</button>
+        </div>
+    }
+
+    <button class="spin-btn" @onclick="Spin">
+        🎰 SPIN
+    </button>
+
+    <button class="fab" @onclick="AddRestaurant">
+        ➕
+    </button>
+</div>
+
+<style>
+    .screen {
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .top-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+    }
+
+    .icon-btn {
+        font-size: 1.4rem;
+        background: none;
+        border: none;
+    }
+
+    .wheel-container {
+        flex: 1;
+        overflow-y: scroll;
+        scroll-snap-type: y mandatory;
+        padding: 40vh 0;
+    }
+
+    .wheel-item {
+        scroll-snap-align: center;
+        text-align: center;
+        padding: 1rem;
+        opacity: 0.4;
+        transition: transform 0.2s ease, opacity 0.2s ease;
+    }
+
+    .wheel-item.active {
+        opacity: 1;
+        padding: 4rem 0rem;
+        transform: scale(2);
+    }
+
+    .wheel-name {
+        font-size: 1.8rem;
+        font-weight: 600;
+    }
+
+    .wheel-meta {
+        font-size: 0.9rem;
+        color: #666;
+    }
+
+    .center-actions {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        padding-bottom: 0.5rem;
+    }
+
+    .center-actions button {
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+    }
+
+    .center-actions .danger {
+        background: #ffdddd;
+    }
+
+    .spin-btn {
+        margin: 1rem;
+        padding: 1rem;
+        font-size: 1.4rem;
+        border-radius: 14px;
+    }
+
+    .fab {
+        position: fixed;
+        bottom: 1.5rem;
+        right: 1.5rem;
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        font-size: 1.6rem;
+    }
+</style>
+
+@code {
+    private ElementReference WheelRef;
+
+    //TODO: Replace this with an 'all' list and a 'filtered' list that pulls from the local DB and applies a filter
+    private List<Restaurant> VisibleRestaurants = new()
+    {
+        new Restaurant("Burger Joint", Cuisine.Burgers),
+        new Restaurant("Taco Truck", Cuisine.Mexican),
+        new Restaurant("Pizza Place", Cuisine.Pizza),
+        new Restaurant("Sushi Place", Cuisine.Sushi),
+        new Restaurant("Steakhouse", Cuisine.Steakhouse)
+    };
+
+    private int SelectedIndex = 0;
+
+    private Restaurant? SelectedRestaurant => SelectedIndex >= 0 && SelectedIndex < VisibleRestaurants.Count ? VisibleRestaurants[SelectedIndex] : null;
+
+    private async Task OnScroll()
+    {
+        SelectedIndex = await JS.InvokeAsync<int>("spinWheel.getCenteredIndex", WheelRef);
+
+        StateHasChanged();
+    }
+
+    private async Task Spin()
+    {
+        if (VisibleRestaurants.Count == 0) return;
+
+        var targetIndex = Random.Shared.Next(VisibleRestaurants.Count);
+
+        await JS.InvokeVoidAsync("spinWheel.scrollToIndex", WheelRef, targetIndex);
+    }
+
+    private void OpenFilters()
+    {
+        //TODO: Open 'filter' menu
+        Console.WriteLine("Open filter");
+    }
+
+    private void AddRestaurant()
+    {
+        //TODO: Navigate to 'add' page
+        Console.WriteLine("Add restaurant");
+    }
+
+    private void EditSelected()
+    {
+        //TODO: Open 'edit' page
+        Console.WriteLine($"Edit {SelectedRestaurant?.Name}");
+    }
+
+    private void DeleteSelected()
+    {
+        if (SelectedRestaurant is null) return;
+
+        VisibleRestaurants.RemoveAt(SelectedIndex);
+        SelectedIndex = Math.Clamp(SelectedIndex, 0, VisibleRestaurants.Count - 1);
+    }
+}
