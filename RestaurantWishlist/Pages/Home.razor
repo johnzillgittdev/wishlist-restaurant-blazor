@@ -72,6 +72,7 @@
                     <div class="wheel-text">
                         <div class="wheel-name">@r.Name</div>
                         <div class="wheel-meta">@string.Join(", ", r.Cuisines)</div>
+                        <div class="wheel-cost">@r.Cost</div>
                     </div>
                     @if (isActive)
                     {
@@ -161,6 +162,13 @@
         font-size: 0.85rem;
         color: var(--mud-palette-text-secondary);
         margin-top: 0.15rem;
+    }
+
+    .wheel-cost {
+        font-size: 0.75rem;
+        color: var(--mud-palette-text-secondary);
+        opacity: 0.65;
+        margin-top: 0.1rem;
     }
 
     .left-actions {

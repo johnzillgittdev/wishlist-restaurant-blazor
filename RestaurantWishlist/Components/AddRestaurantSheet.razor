@@ -16,6 +16,20 @@
         </div>
 
         <div class="field">
+            <div class="field-label">Cost</div>
+            <div class="chip-grid">
+                @foreach (var cost in Enum.GetValues<Cost>())
+                {
+                    var c = cost;
+                    var isSelected = _selectedCost == c;
+                    <button class="chip @(isSelected ? "chip-selected" : "")" @onclick="() => _selectedCost = c">
+                        @cost — @CostRange(c)
+                    </button>
+                }
+            </div>
+        </div>
+
+        <div class="field">
             <div class="field-label">Cuisine</div>
             <div class="chip-grid">
                 @foreach (var cuisine in Enum.GetValues<Cuisine>())
@@ -134,8 +148,9 @@
 
     private string _name = string.Empty;
     private List<Cuisine> _selectedCuisines = new();
+    private Cost? _selectedCost;
 
-    private bool CanSave => !string.IsNullOrWhiteSpace(_name) && _selectedCuisines.Any();
+    private bool CanSave => !string.IsNullOrWhiteSpace(_name) && _selectedCuisines.Any() && _selectedCost.HasValue;
 
     private void ToggleCuisine(Cuisine cuisine)
     {
@@ -148,7 +163,7 @@
     private async Task Save()
     {
         if (!CanSave) return;
-        var restaurant = new Restaurant(_name.Trim(), new List<Cuisine>(_selectedCuisines));
+        var restaurant = new Restaurant(_name.Trim(), new List<Cuisine>(_selectedCuisines), _selectedCost!.Value);
         await OnSaved.InvokeAsync(restaurant);
         Reset();
     }
@@ -163,8 +178,18 @@
     {
         _name = string.Empty;
         _selectedCuisines.Clear();
+        _selectedCost = null;
     }
 
     private static string FormatCuisine(Cuisine c) =>
         Regex.Replace(c.ToString(), "(?<=[a-z])([A-Z])", " $1");
+
+    private static string CostRange(Cost c) => c switch
+    {
+        Cost.Cheap      => "Under $10",
+        Cost.Affordable => "$10–$25",
+        Cost.Expensive  => "$25–$50",
+        Cost.Luxury     => "$50+",
+        _               => string.Empty
+    };
 }
