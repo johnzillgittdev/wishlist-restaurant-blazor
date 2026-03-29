@@ -185,9 +185,25 @@
         }
     }
 
+    private bool _isRecentering = false;
+
     private async Task OnScroll()
     {
+        if (_isRecentering) return;
+
         SelectedIndex = await JS.InvokeAsync<int>("spinWheel.getCenteredIndex", WheelRef);
+
+        // Silently re-center when within 5 loops of either edge so the list never ends
+        var total = VisibleRestaurants.Count * RepeatCount;
+        var buffer = VisibleRestaurants.Count * 5;
+        if (VisibleRestaurants.Count > 0 && (SelectedIndex < buffer || SelectedIndex > total - buffer))
+        {
+            _isRecentering = true;
+            SelectedIndex = VisibleRestaurants.Count * (RepeatCount / 2) + (SelectedIndex % VisibleRestaurants.Count);
+            await JS.InvokeVoidAsync("spinWheel.scrollToIndex", WheelRef, SelectedIndex, true);
+            _isRecentering = false;
+        }
+
         StateHasChanged();
     }
 
