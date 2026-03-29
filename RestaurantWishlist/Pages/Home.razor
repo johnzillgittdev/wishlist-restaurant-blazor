@@ -6,8 +6,8 @@
 <PageTitle>Wishlist Restaurants</PageTitle>
 
 <div class="screen">
-    <button class="corner-btn top-left" @onclick="OpenFilters">⚙️</button>
-    <button class="corner-btn top-right" @onclick="Spin">🎰</button>
+    <MudIconButton Class="corner-btn top-left" OnClick="OpenFilters" Icon="@Icons.Material.Filled.Tune" Style="color: var(--mud-palette-text-secondary);" />
+    <MudIconButton Class="corner-btn top-right" OnClick="Spin" Icon="@Icons.Material.Filled.Casino" Style="color: var(--mud-palette-text-secondary);" />
 
     @if (VisibleRestaurants.Count == 0)
     {
@@ -27,7 +27,7 @@
                 <div class="wheel-item @(isActive ? "active" : "")">
                     @if (isActive)
                     {
-                        <button class="side-btn" @onclick="EditSelected">✏️</button>
+                        <MudIconButton Class="side-btn" OnClick="EditSelected" Icon="@Icons.Material.Filled.Edit" Size="Size.Small" />
                     }
                     <div class="wheel-text">
                         <div class="wheel-name">@r.Name</div>
@@ -35,14 +35,14 @@
                     </div>
                     @if (isActive)
                     {
-                        <button class="side-btn danger" @onclick="DeleteSelected">🗑️</button>
+                        <MudIconButton Class="side-btn danger" OnClick="DeleteSelected" Icon="@Icons.Material.Filled.DeleteOutline" Size="Size.Small" />
                     }
                 </div>
             }
         </div>
     }
 
-    <button class="fab" @onclick="AddRestaurant">➕</button>
+    <MudFab Class="fab" OnClick="AddRestaurant" StartIcon="@Icons.Material.Filled.Add" Color="Color.Primary" />
 </div>
 
 <AddRestaurantSheet IsVisible="_showAddSheet"
@@ -55,20 +55,17 @@
         display: flex;
         flex-direction: column;
         overflow: hidden;
+        background: var(--mud-palette-background);
+        font-family: 'Roboto', sans-serif;
     }
 
     .corner-btn {
-        position: fixed;
-        background: none;
-        border: none;
-        font-size: 1.4rem;
-        padding: 1rem;
-        cursor: pointer;
+        position: fixed !important;
         z-index: 10;
     }
 
-    .top-left { top: 0; left: 0; }
-    .top-right { top: 0; right: 0; }
+    .top-left { top: 0.25rem; left: 0.25rem; }
+    .top-right { top: 0.25rem; right: 0.25rem; }
 
     .wheel-container {
         flex: 1;
@@ -83,7 +80,7 @@
         align-items: center;
         justify-content: center;
         padding: 1rem;
-        opacity: 0.4;
+        opacity: 0.3;
         transition: transform 0.2s ease, opacity 0.2s ease;
     }
 
@@ -101,27 +98,28 @@
     .wheel-name {
         font-size: 1.8rem;
         font-weight: 600;
+        color: var(--mud-palette-text-primary);
+    }
+
+    .wheel-item.active .wheel-name {
+        color: var(--mud-palette-primary);
     }
 
     .wheel-meta {
-        font-size: 0.9rem;
-        color: #666;
+        font-size: 0.85rem;
+        color: var(--mud-palette-text-secondary);
+        margin-top: 0.15rem;
     }
 
     .side-btn {
         flex-shrink: 0;
-        margin: 0 1.5rem;
-        padding: 0.4rem 0.6rem;
-        border-radius: 8px;
-        background: none;
-        border: 1px solid #ccc;
-        font-size: 1rem;
-        cursor: pointer;
+        margin: 0 0.75rem;
+        border-radius: 50% !important;
+        color: var(--mud-palette-text-secondary) !important;
     }
 
     .side-btn.danger {
-        background: #ffdddd;
-        border-color: #f5a5a5;
+        color: #C2485A !important;
     }
 
     .empty-state {
@@ -131,7 +129,6 @@
         align-items: center;
         justify-content: center;
         gap: 0.5rem;
-        color: #aaa;
     }
 
     .empty-icon {
@@ -142,24 +139,19 @@
     .empty-title {
         font-size: 1.1rem;
         font-weight: 600;
-        color: #888;
+        color: var(--mud-palette-text-secondary);
     }
 
     .empty-subtitle {
         font-size: 0.9rem;
+        color: var(--mud-palette-text-secondary);
+        opacity: 0.7;
     }
 
     .fab {
-        position: fixed;
-        bottom: 1.5rem;
-        right: 1.5rem;
-        width: 56px;
-        height: 56px;
-        border-radius: 50%;
-        font-size: 1.6rem;
-        border: 1px solid #ccc;
-        background: #f5f5f5;
-        cursor: pointer;
+        position: fixed !important;
+        bottom: 1.5rem !important;
+        right: 1.5rem !important;
     }
 </style>
 
@@ -177,6 +169,11 @@
 
     private Restaurant? SelectedRestaurant =>
         VisibleRestaurants.Count > 0 ? VisibleRestaurants[SelectedIndex % VisibleRestaurants.Count] : null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        VisibleRestaurants = await Repository.GetAllAsync();
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
