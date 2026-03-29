@@ -391,10 +391,11 @@
         Console.WriteLine($"Edit {SelectedRestaurant?.Name}");
     }
 
-    private void DeleteSelected()
+    private async Task DeleteSelected()
     {
         if (SelectedRestaurant is null) return;
 
+        await Repository.DeleteAsync(SelectedRestaurant.Id);
         _allRestaurants.Remove(SelectedRestaurant);
         ApplyFilter();
     }
