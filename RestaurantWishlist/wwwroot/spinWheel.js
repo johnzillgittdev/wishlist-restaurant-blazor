@@ -20,12 +20,12 @@
         return closest;
     },
 
-    scrollToIndex: (container, index) => {
+    scrollToIndex: (container, index, instant = false) => {
         const el = container.children[index];
         if (!el) return;
 
         el.scrollIntoView({
-            behavior: "smooth",
+            behavior: instant ? "instant" : "smooth",
             block: "center"
         });
     }

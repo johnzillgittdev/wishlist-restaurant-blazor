@@ -1,21 +1,31 @@
-﻿using RestaurantWishlist.Tables;
+﻿using BlazorDexie.Options;
+using Microsoft.AspNetCore.Components;
+using RestaurantWishlist.DB;
+using RestaurantWishlist.Tables;
 
 namespace RestaurantWishlist.Repository;
 
 public class LocalRestaurantRepository : IRestaurantRepository
 {
-    public Task DeleteAsync(Guid id)
+    private MyDB _db;
+
+    public LocalRestaurantRepository(MyDB db)
     {
-        throw new NotImplementedException();
+        _db = db;
     }
 
-    public Task<List<Restaurant>> GetAllAsync()
+    public async Task DeleteAsync(Guid id)
     {
-        throw new NotImplementedException();
+        await _db.Restaurants.Delete(id);
     }
 
-    public Task SaveAsync(Restaurant restaurant)
+    public async Task<List<Restaurant>> GetAllAsync()
     {
-        throw new NotImplementedException();
+        return await _db.Restaurants.ToList();
+    }
+
+    public async Task SaveAsync(Restaurant restaurant)
+    {
+        await _db.Restaurants.Put(restaurant);
     }
 }

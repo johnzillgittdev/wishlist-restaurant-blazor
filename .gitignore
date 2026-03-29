@@ -1,3 +1,5 @@
 .vs/*
 RestaurantWishlist/bin/*
 RestaurantWishlist/obj/*
+RestaurantWishlist/console/
+CLAUDE.md

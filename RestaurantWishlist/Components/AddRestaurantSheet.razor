@@ -1,0 +1,195 @@
+@using System.Text.RegularExpressions
+
+@if (IsVisible)
+{
+    <div class="sheet-backdrop" @onclick="Close"></div>
+    <div class="sheet" @onclick:stopPropagation>
+        <div class="sheet-handle"></div>
+        <h2>Add Restaurant</h2>
+
+        <div class="field">
+            <label>Name</label>
+            <input type="text" @bind="_name" @bind:event="oninput" placeholder="Restaurant name" />
+        </div>
+
+        <div class="field">
+            <label>Cuisine</label>
+            <div class="chip-grid">
+                @foreach (var cuisine in Enum.GetValues<Cuisine>())
+                {
+                    var c = cuisine;
+                    var isSelected = _selectedCuisines.Contains(c);
+                    <button class="chip @(isSelected ? "chip-selected" : "")" @onclick="() => ToggleCuisine(c)">
+                        @FormatCuisine(c)
+                    </button>
+                }
+            </div>
+        </div>
+
+        <div class="sheet-actions">
+            <button class="cancel-btn" @onclick="Close">Cancel</button>
+            <button class="save-btn" @onclick="Save" disabled="@(!CanSave)">Add</button>
+        </div>
+    </div>
+}
+
+<style>
+    .sheet-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.4);
+        z-index: 100;
+    }
+
+    .sheet {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: white;
+        border-radius: 16px 16px 0 0;
+        padding: 1rem 1.5rem 2.5rem;
+        z-index: 101;
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .sheet-handle {
+        width: 40px;
+        height: 4px;
+        background: #ccc;
+        border-radius: 2px;
+        margin: 0 auto 1.5rem;
+    }
+
+    .sheet h2 {
+        margin: 0 0 1.25rem;
+        font-size: 1.2rem;
+    }
+
+    .field {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+        margin-bottom: 1rem;
+    }
+
+    .field label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #444;
+    }
+
+    .field input {
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        padding: 0.6rem 0.8rem;
+        font-size: 1rem;
+        outline: none;
+    }
+
+    .field input:focus {
+        border-color: #888;
+    }
+
+    .chip-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .chip {
+        padding: 0.35rem 0.8rem;
+        border-radius: 20px;
+        border: none;
+        font-size: 0.85rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: transform 0.1s ease;
+        background: #3a3a3a;
+        color: white;
+    }
+
+    .chip.chip-selected {
+        background: #e07820;
+        color: white;
+    }
+
+    .chip:active {
+        transform: scale(0.93);
+    }
+
+    .sheet-actions {
+        display: flex;
+        gap: 0.75rem;
+        margin-top: 1.5rem;
+    }
+
+    .cancel-btn {
+        flex: 1;
+        padding: 0.75rem;
+        border-radius: 10px;
+        border: 1px solid #ccc;
+        background: none;
+        font-size: 1rem;
+        cursor: pointer;
+    }
+
+    .save-btn {
+        flex: 2;
+        padding: 0.75rem;
+        border-radius: 10px;
+        border: none;
+        background: #1a1a1a;
+        color: white;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .save-btn:disabled {
+        background: #ccc;
+        cursor: default;
+    }
+</style>
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback<Restaurant> OnSaved { get; set; }
+
+    private string _name = string.Empty;
+    private List<Cuisine> _selectedCuisines = new();
+
+    private bool CanSave => !string.IsNullOrWhiteSpace(_name) && _selectedCuisines.Any();
+
+    private void ToggleCuisine(Cuisine cuisine)
+    {
+        if (_selectedCuisines.Contains(cuisine))
+            _selectedCuisines.Remove(cuisine);
+        else
+            _selectedCuisines.Add(cuisine);
+    }
+
+    private async Task Save()
+    {
+        if (!CanSave) return;
+        var restaurant = new Restaurant(_name.Trim(), new List<Cuisine>(_selectedCuisines));
+        await OnSaved.InvokeAsync(restaurant);
+        Reset();
+    }
+
+    private async Task Close()
+    {
+        Reset();
+        await OnClose.InvokeAsync();
+    }
+
+    private void Reset()
+    {
+        _name = string.Empty;
+        _selectedCuisines.Clear();
+    }
+
+    private static string FormatCuisine(Cuisine c) =>
+        Regex.Replace(c.ToString(), "(?<=[a-z])([A-Z])", " $1");
+}

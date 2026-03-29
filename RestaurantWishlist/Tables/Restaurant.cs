@@ -4,16 +4,22 @@ namespace RestaurantWishlist.Tables;
 
 public class Restaurant
 {
-    public Guid ID { get; set; }
+    public Guid Id { get; set; }
     public string Name { get; set; }
-    public Cuisine Cuisine { get; set; }
+    public List<Cuisine> Cuisines { get; set; }
     public DateTime LastModified { get; set; }
 
-    public Restaurant(string name, Cuisine cuisine)
+    public Restaurant(string name, List<Cuisine> cuisines)
     {
-        ID = Guid.NewGuid();
+        Id = Guid.NewGuid();
         Name = name;
-        Cuisine = cuisine;
+        Cuisines = cuisines;
         LastModified = DateTime.UtcNow;
+    }
+
+    public Restaurant()
+    {
+        Name = string.Empty;
+        Cuisines = new List<Cuisine>();
     }
 }

@@ -2,6 +2,7 @@
 
 public enum Cuisine
 {
+    American,
     Bakery,
     BBQ,
     Breakfast,
@@ -9,14 +10,19 @@ public enum Cuisine
     Burgers,
     Chicken,
     Chinese,
+    FastFood,
+    French,
     Greek,
     Indian,
     Italian,
+    Japanese,
+    Korean,
     Mediterranean,
     Mexican,
     Pizza,
     Sandwiches,
+    Seafood,
     Steakhouse,
-    Sushi,
-    Thai
+    Thai,
+    Vietnamese
 }
