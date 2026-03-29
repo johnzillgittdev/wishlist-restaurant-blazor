@@ -6,9 +6,25 @@
 <PageTitle>Wishlist Restaurants</PageTitle>
 
 <div class="screen">
-    <MudIconButton Class="corner-btn top-left" OnClick="OpenFilters" Icon="@Icons.Material.Filled.Tune" Style="color: var(--mud-palette-text-secondary);" />
+    <button class="corner-btn top-left filter-btn" @onclick="OpenFilters">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="44" height="44" style="pointer-events: none;">
+            <!-- Slider lines -->
+            <line x1="3" y1="7"  x2="21" y2="7"  stroke="#6B5F80" stroke-width="1.75" stroke-linecap="round"/>
+            <line x1="3" y1="12" x2="21" y2="12" stroke="#6B5F80" stroke-width="1.75" stroke-linecap="round"/>
+            <line x1="3" y1="17" x2="21" y2="17" stroke="#6B5F80" stroke-width="1.75" stroke-linecap="round"/>
+            <!-- Knobs -->
+            <circle cx="8"  cy="7"  r="2.75" fill="#9B89C4"/>
+            <circle cx="15" cy="12" r="2.75" fill="#E8A87C"/>
+            <circle cx="10" cy="17" r="2.75" fill="#87B5A2"/>
+            <!-- Active filter indicator -->
+            @if (_isFiltered)
+            {
+                <circle cx="20" cy="4" r="2.75" fill="#E07B7B"/>
+            }
+        </svg>
+    </button>
     <button class="corner-btn top-right spin-wheel-btn @(_isSpinning ? "spinning" : "")" @onclick="Spin">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="52" height="52" style="pointer-events: none;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="78" height="78" style="pointer-events: none;">
             <!-- Six colored segments -->
             <path d="M12,12 L12,2 A10,10 0 0,1 20.66,7 Z" fill="#9B89C4"/>
             <path d="M12,12 L20.66,7 A10,10 0 0,1 20.66,17 Z" fill="#E8A87C"/>
@@ -97,6 +113,12 @@
 <AddRestaurantSheet IsVisible="_showAddSheet"
                     OnClose="() => _showAddSheet = false"
                     OnSaved="OnRestaurantAdded" />
+
+<FilterSheet IsVisible="_showFilterSheet"
+             ActiveCuisines="_filterCuisines"
+             ActiveCosts="_filterCosts"
+             OnClose="() => _showFilterSheet = false"
+             OnApply="OnFilterApplied" />
 
 
 <style>
@@ -241,6 +263,14 @@
         line-height: 0;
     }
 
+    .filter-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0.5rem;
+        line-height: 0;
+    }
+
     @@keyframes spin-icon {
         0%   { transform: rotate(0deg); }
         100% { transform: rotate(720deg); }
@@ -256,9 +286,14 @@
 
     private ElementReference WheelRef;
 
-    //TODO: Replace this with an 'all' list and a 'filtered' list that pulls from the local DB and applies a filter
+    private List<Restaurant> _allRestaurants = new();
     private List<Restaurant> VisibleRestaurants = new();
+    private List<Cuisine> _filterCuisines = new();
+    private List<Cost> _filterCosts = new();
+    private bool _isFiltered => _filterCuisines.Any() || _filterCosts.Any();
+
     private bool _showAddSheet = false;
+    private bool _showFilterSheet = false;
     private bool _isSpinning = false;
     private int _lastRenderedCount = -1;
 
@@ -269,7 +304,8 @@
 
     protected override async Task OnInitializedAsync()
     {
-        VisibleRestaurants = await Repository.GetAllAsync();
+        _allRestaurants = await Repository.GetAllAsync();
+        ApplyFilter();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -322,10 +358,22 @@
         _isSpinning = false;
     }
 
-    private void OpenFilters()
+    private void OpenFilters() => _showFilterSheet = true;
+
+    private void OnFilterApplied((List<Cuisine> cuisines, List<Cost> costs) filter)
     {
-        //TODO: Open 'filter' menu
-        Console.WriteLine("Open filter");
+        _filterCuisines = filter.cuisines;
+        _filterCosts = filter.costs;
+        ApplyFilter();
+    }
+
+    private void ApplyFilter()
+    {
+        VisibleRestaurants = _allRestaurants
+            .Where(r =>
+                (!_filterCuisines.Any() || r.Cuisines.Any(c => _filterCuisines.Contains(c))) &&
+                (!_filterCosts.Any() || _filterCosts.Contains(r.Cost)))
+            .ToList();
     }
 
     private void AddRestaurant() => _showAddSheet = true;
@@ -333,7 +381,8 @@
     private async Task OnRestaurantAdded(Restaurant restaurant)
     {
         await Repository.SaveAsync(restaurant);
-        VisibleRestaurants.Add(restaurant);
+        _allRestaurants.Add(restaurant);
+        ApplyFilter();
         _showAddSheet = false;
     }
 
@@ -353,7 +402,8 @@
     {
         if (SelectedRestaurant is null) return;
 
-        VisibleRestaurants.RemoveAt(SelectedIndex % VisibleRestaurants.Count);
+        _allRestaurants.Remove(SelectedRestaurant);
+        ApplyFilter();
     }
 
 }

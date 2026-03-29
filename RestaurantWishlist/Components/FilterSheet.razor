@@ -1,0 +1,207 @@
+@using System.Text.RegularExpressions
+
+@if (IsVisible)
+{
+    <div class="sheet-backdrop" @onclick="Close"></div>
+    <div class="top-sheet" @onclick:stopPropagation>
+        <h2 class="sheet-title">Filter</h2>
+
+        <div class="field">
+            <div class="field-label">Cuisine</div>
+            <div class="chip-grid">
+                @foreach (var cuisine in Enum.GetValues<Cuisine>())
+                {
+                    var cu = cuisine;
+                    var isSelected = _selectedCuisines.Contains(cu);
+                    <button class="chip @(isSelected ? "chip-selected" : "")" @onclick="() => ToggleCuisine(cu)">
+                        @FormatCuisine(cu)
+                    </button>
+                }
+            </div>
+        </div>
+
+        <div class="field">
+            <div class="field-label">Cost</div>
+            <div class="chip-grid">
+                @foreach (var cost in Enum.GetValues<Cost>())
+                {
+                    var co = cost;
+                    var isSelected = _selectedCosts.Contains(co);
+                    <button class="chip @(isSelected ? "chip-selected" : "")" @onclick="() => ToggleCost(co)">
+                        @cost — @CostRange(co)
+                    </button>
+                }
+            </div>
+        </div>
+
+        <div class="sheet-actions">
+            <MudButton Variant="Variant.Outlined"
+                       OnClick="Clear"
+                       FullWidth="true"
+                       Style="border-color: var(--mud-palette-lines-default); color: var(--mud-palette-text-secondary);">
+                Clear
+            </MudButton>
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       OnClick="Apply"
+                       FullWidth="true">
+                Apply
+            </MudButton>
+        </div>
+
+        <div class="sheet-handle"></div>
+    </div>
+}
+
+<style>
+    .sheet-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(45, 32, 64, 0.45);
+        z-index: 100;
+    }
+
+    .top-sheet {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: var(--mud-palette-surface);
+        border-radius: 0 0 20px 20px;
+        padding: 3rem 1.5rem 1.25rem;
+        z-index: 101;
+        box-shadow: 0 6px 32px rgba(45, 32, 64, 0.18);
+        overflow-y: auto;
+        max-height: 80vh;
+    }
+
+    .sheet-title {
+        margin: 0 0 1.25rem;
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: var(--mud-palette-text-primary);
+    }
+
+    .field {
+        margin-bottom: 1rem;
+    }
+
+    .field-label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--mud-palette-text-secondary);
+        margin-bottom: 0.5rem;
+    }
+
+    .chip-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .chip {
+        padding: 0.35rem 0.85rem;
+        border-radius: 20px;
+        border: none;
+        font-size: 0.82rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: transform 0.1s ease, background 0.15s ease;
+        background: #4A3F5C;
+        color: #FAF7FF;
+    }
+
+    .chip.chip-selected {
+        background: var(--mud-palette-secondary);
+        color: var(--mud-palette-text-primary);
+    }
+
+    .chip:active {
+        transform: scale(0.93);
+    }
+
+    .sheet-actions {
+        display: flex;
+        gap: 0.75rem;
+        margin-top: 1.5rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .sheet-handle {
+        width: 40px;
+        height: 4px;
+        background: var(--mud-palette-lines-default);
+        border-radius: 2px;
+        margin: 0 auto;
+    }
+</style>
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public List<Cuisine> ActiveCuisines { get; set; } = new();
+    [Parameter] public List<Cost> ActiveCosts { get; set; } = new();
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback<(List<Cuisine>, List<Cost>)> OnApply { get; set; }
+
+    private List<Cuisine> _selectedCuisines = new();
+    private List<Cost> _selectedCosts = new();
+
+    private bool _wasVisible = false;
+
+    protected override void OnParametersSet()
+    {
+        if (IsVisible && !_wasVisible)
+        {
+            _selectedCuisines = new List<Cuisine>(ActiveCuisines);
+            _selectedCosts = new List<Cost>(ActiveCosts);
+        }
+        _wasVisible = IsVisible;
+    }
+
+    private void ToggleCuisine(Cuisine cuisine)
+    {
+        if (_selectedCuisines.Contains(cuisine))
+            _selectedCuisines.Remove(cuisine);
+        else
+            _selectedCuisines.Add(cuisine);
+    }
+
+    private void ToggleCost(Cost cost)
+    {
+        if (_selectedCosts.Contains(cost))
+            _selectedCosts.Remove(cost);
+        else
+            _selectedCosts.Add(cost);
+    }
+
+    private async Task Apply()
+    {
+        await OnApply.InvokeAsync((new List<Cuisine>(_selectedCuisines), new List<Cost>(_selectedCosts)));
+        await OnClose.InvokeAsync();
+    }
+
+    private async Task Clear()
+    {
+        _selectedCuisines.Clear();
+        _selectedCosts.Clear();
+        await OnApply.InvokeAsync((new List<Cuisine>(), new List<Cost>()));
+        await OnClose.InvokeAsync();
+    }
+
+    private async Task Close()
+    {
+        await OnClose.InvokeAsync();
+    }
+
+    private static string FormatCuisine(Cuisine c) =>
+        Regex.Replace(c.ToString(), "(?<=[a-z])([A-Z])", " $1");
+
+    private static string CostRange(Cost c) => c switch
+    {
+        Cost.Cheap      => "Under $10",
+        Cost.Affordable => "$10–$25",
+        Cost.Expensive  => "$25–$50",
+        Cost.Luxury     => "$50+",
+        _               => string.Empty
+    };
+}
