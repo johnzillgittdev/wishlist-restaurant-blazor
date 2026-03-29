@@ -7,7 +7,26 @@
 
 <div class="screen">
     <MudIconButton Class="corner-btn top-left" OnClick="OpenFilters" Icon="@Icons.Material.Filled.Tune" Style="color: var(--mud-palette-text-secondary);" />
-    <MudIconButton Class="corner-btn top-right" OnClick="Spin" Icon="@Icons.Material.Filled.Casino" Style="color: var(--mud-palette-text-secondary);" />
+    <button class="corner-btn top-right spin-wheel-btn @(_isSpinning ? "spinning" : "")" @onclick="Spin">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="52" height="52" style="pointer-events: none;">
+            <!-- Six colored segments -->
+            <path d="M12,12 L12,2 A10,10 0 0,1 20.66,7 Z" fill="#9B89C4"/>
+            <path d="M12,12 L20.66,7 A10,10 0 0,1 20.66,17 Z" fill="#E8A87C"/>
+            <path d="M12,12 L20.66,17 A10,10 0 0,1 12,22 Z" fill="#C4A96B"/>
+            <path d="M12,12 L12,22 A10,10 0 0,1 3.34,17 Z" fill="#87B5A2"/>
+            <path d="M12,12 L3.34,17 A10,10 0 0,1 3.34,7 Z" fill="#E07B7B"/>
+            <path d="M12,12 L3.34,7 A10,10 0 0,1 12,2 Z" fill="#7BA8E0"/>
+            <!-- Outer rim -->
+            <circle cx="12" cy="12" r="10" fill="none" stroke="white" stroke-width="0.75"/>
+            <!-- Center hub -->
+            <circle cx="12" cy="12" r="5" fill="white"/>
+            <!-- SPIN label -->
+            <text x="12" y="12" text-anchor="middle" dy="0.35em" font-size="3.2" font-weight="800" fill="#2D2040" font-family="sans-serif" letter-spacing="0.3">SPIN</text>
+            <!-- Curved spin arrow — dark so it's visible on any segment -->
+            <path d="M15.5,2.6 A10,10 0 0,1 21.5,8.5" stroke="#2D2040" stroke-width="2" fill="none" stroke-linecap="round"/>
+            <polyline points="19.4,7.1 21.5,8.5 22.2,6.1" stroke="#2D2040" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+    </button>
 
     @if (VisibleRestaurants.Count == 0)
     {
@@ -27,7 +46,28 @@
                 <div class="wheel-item @(isActive ? "active" : "")">
                     @if (isActive)
                     {
-                        <MudIconButton Class="side-btn" OnClick="EditSelected" Icon="@Icons.Material.Filled.Edit" Size="Size.Small" />
+                        <div class="left-actions">
+                            <button class="side-btn" @onclick="EditSelected">
+                                <svg viewBox="0 0 24 24" width="28" height="28" xmlns="http://www.w3.org/2000/svg" style="pointer-events:none">
+                                    <g transform="rotate(-45 12 12)">
+                                        <rect x="9" y="2" width="6" height="3" rx="1" fill="#E07B7B"/>
+                                        <rect x="9" y="5" width="6" height="8" fill="#9B89C4"/>
+                                        <rect x="9" y="13" width="6" height="2" fill="#C4A96B"/>
+                                        <polygon points="9,15 15,15 12,21" fill="#E8A87C"/>
+                                    </g>
+                                </svg>
+                            </button>
+                            <button class="side-btn" @onclick="DeleteSelected">
+                                <svg viewBox="0 0 24 24" width="28" height="28" xmlns="http://www.w3.org/2000/svg" style="pointer-events:none">
+                                    <path d="M9 3h6a1 1 0 011 1v1H8V4a1 1 0 011-1z" fill="#C4A96B"/>
+                                    <rect x="4" y="5" width="16" height="2.5" rx="1.25" fill="#E07B7B"/>
+                                    <path d="M6.5 9l1.3 11c.1.6.6 1 1.2 1h6c.6 0 1.1-.4 1.2-1L17.5 9h-11z" fill="#E07B7B"/>
+                                    <line x1="10" y1="11" x2="10.5" y2="19" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+                                    <line x1="12" y1="11" x2="12" y2="19" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+                                    <line x1="14" y1="11" x2="13.5" y2="19" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+                                </svg>
+                            </button>
+                        </div>
                     }
                     <div class="wheel-text">
                         <div class="wheel-name">@r.Name</div>
@@ -35,19 +75,28 @@
                     </div>
                     @if (isActive)
                     {
-                        <MudIconButton Class="side-btn danger" OnClick="DeleteSelected" Icon="@Icons.Material.Filled.DeleteOutline" Size="Size.Small" />
+                        <div class="right-actions">
+                            <MudIconButton Class="side-btn" OnClick="OpenMap" Icon="@Icons.Material.Filled.Map" Size="Size.Small" />
+                        </div>
                     }
                 </div>
             }
         </div>
     }
 
-    <MudFab Class="fab" OnClick="AddRestaurant" StartIcon="@Icons.Material.Filled.Add" Color="Color.Primary" />
+    <button class="fab custom-fab" @onclick="AddRestaurant">
+        <svg viewBox="0 0 24 24" width="56" height="56" xmlns="http://www.w3.org/2000/svg" style="pointer-events:none">
+            <defs><linearGradient id="gadd" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#9B89C4"/><stop offset="100%" stop-color="#E8A87C"/></linearGradient></defs>
+            <circle cx="12" cy="12" r="11" fill="url(#gadd)"/>
+            <path d="M12 6V18M6 12H18" stroke="white" stroke-width="3" stroke-linecap="round"/>
+        </svg>
+    </button>
 </div>
 
 <AddRestaurantSheet IsVisible="_showAddSheet"
                     OnClose="() => _showAddSheet = false"
                     OnSaved="OnRestaurantAdded" />
+
 
 <style>
     .screen {
@@ -57,6 +106,7 @@
         overflow: hidden;
         background: var(--mud-palette-background);
         font-family: 'Roboto', sans-serif;
+        max-width: 100vw;
     }
 
     .corner-btn {
@@ -70,8 +120,10 @@
     .wheel-container {
         flex: 1;
         overflow-y: scroll;
+        overflow-x: hidden;
         scroll-snap-type: y mandatory;
         padding: 40vh 0;
+        touch-action: pan-y;
     }
 
     .wheel-item {
@@ -111,15 +163,16 @@
         margin-top: 0.15rem;
     }
 
-    .side-btn {
-        flex-shrink: 0;
-        margin: 0 0.75rem;
-        border-radius: 50% !important;
-        color: var(--mud-palette-text-secondary) !important;
+    .left-actions {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.1rem;
+        margin-right: 0.5rem;
     }
 
-    .side-btn.danger {
-        color: #C2485A !important;
+    .right-actions {
+        margin-left: 0.5rem;
     }
 
     .empty-state {
@@ -153,6 +206,41 @@
         bottom: 1.5rem !important;
         right: 1.5rem !important;
     }
+
+    .custom-fab {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0;
+        line-height: 0;
+        filter: drop-shadow(0 3px 6px rgba(45,32,64,0.25));
+    }
+
+    .side-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0.2rem;
+        line-height: 0;
+        border-radius: 50%;
+    }
+
+    .spin-wheel-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0.5rem;
+        line-height: 0;
+    }
+
+    @@keyframes spin-icon {
+        0%   { transform: rotate(0deg); }
+        100% { transform: rotate(720deg); }
+    }
+
+    .spin-wheel-btn.spinning {
+        animation: spin-icon 0.8s cubic-bezier(0.2, 0, 0.1, 1);
+    }
 </style>
 
 @code {
@@ -163,6 +251,7 @@
     //TODO: Replace this with an 'all' list and a 'filtered' list that pulls from the local DB and applies a filter
     private List<Restaurant> VisibleRestaurants = new();
     private bool _showAddSheet = false;
+    private bool _isSpinning = false;
     private int _lastRenderedCount = -1;
 
     private int SelectedIndex = 0;
@@ -209,7 +298,9 @@
 
     private async Task Spin()
     {
-        if (VisibleRestaurants.Count == 0) return;
+        if (VisibleRestaurants.Count == 0 || _isSpinning) return;
+
+        _isSpinning = true;
 
         var randomOffset = Random.Shared.Next(VisibleRestaurants.Count);
         var loops = Random.Shared.Next(3, 6);
@@ -218,6 +309,9 @@
             VisibleRestaurants.Count * RepeatCount - 1);
 
         await JS.InvokeVoidAsync("spinWheel.scrollToIndex", WheelRef, targetIndex);
+        await Task.Delay(800);
+
+        _isSpinning = false;
     }
 
     private void OpenFilters()
@@ -239,6 +333,12 @@
     {
         //TODO: Open 'edit' page
         Console.WriteLine($"Edit {SelectedRestaurant?.Name}");
+    }
+
+    private void OpenMap()
+    {
+        //TODO: Open preferred map app with restaurant search
+        Console.WriteLine($"Map {SelectedRestaurant?.Name}");
     }
 
     private void DeleteSelected()
